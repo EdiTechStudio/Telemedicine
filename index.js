@@ -6,6 +6,7 @@ var mongoose = require("mongoose");
 var multer = require("multer");
 const Patients = require("./modal/regisForPatients.js");
 const Doctors = require("./modal/regisForDoctors.js");
+const Staff = require("./modal/regisForStaff.js");
 const bcrypt = require("bcryptjs");
 var storage = multer.diskStorage({
 	destination: function(req, file, cb) {
@@ -24,7 +25,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.engine("html", require("ejs").renderFile);
 app.set("view engine", "html");
 app.set("views", "public");
-mongoose.connect("mongodb://Localhost:27017/test", {
+mongoose.connect("mongodb://Localhost:27017/test7", {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
 	useCreateIndex: true
@@ -37,10 +38,17 @@ app.post("/signup", upload.single("avatar"), async (req, res, cb) => {
 	// console.log(req.file);
 	console.log(req.body.number);
 	usernumberreg = await Patients.findOne({ number: req.body.number }).lean();
-	if (usernumberreg == null) {
+	usernumberreg2 = await Staff.findOne({ number: req.body.number }).lean();
+	usernumberreg3 = await Doctors.findOne({ number: req.body.number }).lean();
+	if (
+		usernumberreg == null &&
+		usernumberreg2 == null &&
+		usernumberreg3 == null
+	) {
 		var firstName = req.body.first;
 		var lastName = req.body.last;
 		var username = req.body.username;
+		 chcekname = req.body.username;
 		var password = req.body.password;
 		var number = req.body.number;
 		var userType = req.body.type;
@@ -54,15 +62,15 @@ app.post("/signup", upload.single("avatar"), async (req, res, cb) => {
 			number: number,
 			UserType: userType
 		};
-		// otp = Math.floor(1000 + Math.random() * 9000);
-		// console.log(otp);
-		// const response = await fast2sms.sendMessage({
-		// 	authorization: process.env.API_KEY,
-		// 	message: otp,
-		// 	numbers: [req.body.number]
-		// });
-		// console.log(response);
-		console.log(Object.values(data)[Object.values(data).length-1]);
+		otp = Math.floor(1000 + Math.random() * 9000);
+		console.log(otp);
+		const response = await fast2sms.sendMessage({
+			authorization: process.env.API_KEY,
+			message: otp,
+			numbers: [req.body.number]
+		});
+		console.log(response);
+		console.log(Object.values(data)[Object.values(data).length - 1]);
 		// console.log(req.body.type);
 		return res.render("otp.html");
 	} else {
@@ -79,26 +87,54 @@ app.post("/otpind", async (req, res) => {
 	var otpen = req.body.otpin;
 
 	// console.log(otpen, otp);
-	if (otpen == 123) {
-		console.log(data);
-		try {
-		if(Object.values(data)[Object.values(data).length-1] == "Patient") {
-			const respon = await Patients.create(data);
-			console.log(`successfully registered ${respon}`);
-		}
-		else if (Object.values(data)[Object.values(data).length-1] == "Doctor") {
-			const respon = await Doctors.create(data);
-			console.log(`successfully registered ${respon}`);
-		}
-		} catch (e) {
-			//   console.log(e);
-			if (e.code === 11000) {
-				console.log("username taken");
+	if (otpen == otp) {
+		console.log(chcekname);
+		if(( await Doctors.findOne({ username: chcekname }).lean()==null)&&( await Staff.findOne({ username: chcekname }).lean()==null)&& (await Patients.findOne({ username: chcekname }).lean()==null)) {
+			try {
+				if (Object.values(data)[Object.values(data).length - 1] == "Patient") {
+					const respon = await Patients.create(data);
+					console.log(`successfully registered ${respon}`);
+				} 
+				else if (
+					Object.values(data)[Object.values(data).length - 1] == "Doctor"
+				) {
+					const respon = await Doctors.create(data);
+					console.log(`successfully registered ${respon}`);
+				} else if (
+					Object.values(data)[Object.values(data).length - 1] == "staff"
+				) {
+					const respon = await Staff.create(data);
+					console.log(`successfully registered ${respon}`);
+				}
+			} catch (e) {
+				//   console.log(e);
+				if (e.code === 11000) {
+					console.log("username taken");
+					 res.render("noreg.html", {
+						name: "dear user",
+						message: "the username is already taken",
+						bod: "regis",
+						linkm: "try again",
+						title: "taken"
+					});
+				}
+				throw e;
 			}
-			throw e;
-		}
-
-		return res.redirect("finish.html");
+			return res.redirect("finish.html");
+	}
+	else {
+		console.log("username taken");
+		res.render("noreg.html", {
+		   name: "dear user",
+		   message: "the username is already taken",
+		   bod: "regis",
+		   linkm: "try again",
+		   title: "taken"
+	   });
+	
+	}
+		
+	
 	} else {
 		otp = Math.floor(1000 + Math.random() * 9000);
 		console.log("try again");
@@ -118,14 +154,23 @@ app.post("/logind", async (req, res) => {
 	console.log("Going to logind page");
 	const loginuser = req.body.loginname;
 	const loginpow = req.body.loginpow;
-	const userlogin = await Patients.findOne({ username: loginuser }).lean();
+	const patientlogin = await Patients.findOne({ username: loginuser }).lean();
+	const doctorlogin = await Doctors.findOne({ username: loginuser }).lean();
+	const stafflogin = await Staff.findOne({ username: loginuser }).lean();
 	// console.log(userlogin);
-	if (userlogin != null) {
-		if (await bcrypt.compare(loginpow, userlogin.password)) {
+	if (patientlogin != null) {
+		
+		
+		if (await bcrypt.compare(loginpow, patientlogin.password)) {
 			console.log("logged in");
 			res.render("noreg.html", {
 				name: "",
-				message: "Hi! " + loginuser + " You are logged in",
+				message:
+					"Hi! " +
+					patientlogin.UserType +
+					" " +
+					loginuser +
+					" You are logged in",
 				bod: "login",
 				linkm: "exit",
 				title: "Welcome"
@@ -140,7 +185,61 @@ app.post("/logind", async (req, res) => {
 				title: "Wrong password"
 			});
 		}
-	} else {
+	} else if (doctorlogin != null) {
+		if (await bcrypt.compare(loginpow, doctorlogin.password)) {
+			console.log("logged in");
+			res.render("noreg.html", {
+				name: "",
+				message:
+					"Hi! " +
+					doctorlogin.UserType +
+					" " +
+					loginuser +
+					" You are logged in",
+				bod: "login",
+				linkm: "exit",
+				title: "Welcome"
+			});
+		}
+		else {
+			console.log("wrong password");
+			res.render("noreg.html", {
+				name: loginuser,
+				message: "your password is incorrect",
+				bod: "login",
+				linkm: "Try again",
+				title: "Wrong password"
+			});
+		}
+	} 
+	else if (stafflogin != null) {
+		if (await bcrypt.compare(loginpow, stafflogin.password)) {
+			console.log("logged in");
+			res.render("noreg.html", {
+				name: "",
+				message:
+					"Hi! " +
+					stafflogin.UserType +
+					" " +
+					loginuser +
+					" You are logged in",
+				bod: "login",
+				linkm: "exit",
+				title: "Welcome"
+			});
+		}
+		else {
+			console.log("wrong password");
+			res.render("noreg.html", {
+				name: loginuser,
+				message: "your password is incorrect",
+				bod: "login",
+				linkm: "Try again",
+				title: "Wrong password"
+			});
+		}
+	}
+	else {
 		console.log("not registered");
 		res.render("noreg.html", {
 			name: loginuser,
@@ -155,8 +254,11 @@ app.get("/forget", async (req, res) => {
 	res.render("forget.html");
 });
 app.post("/forgetotp", async (req, res) => {
-	usernumber = await Patients.findOne({ number: req.body.forgetnumber }).lean();
-	if (usernumber != null) {
+	forgetnum=req.body.forgetnumber;
+	patientnumber = await Patients.findOne({ number: forgetnum }).lean();
+	doctornumber = await Doctors.findOne({ number: forgetnum }).lean();
+	staffnumber = await Staff.findOne({ number: forgetnum }).lean();
+	if (patientnumber != null) {
 		otp = Math.floor(1000 + Math.random() * 9000);
 		console.log(otp);
 		const response = await fast2sms.sendMessage({
@@ -165,8 +267,37 @@ app.post("/forgetotp", async (req, res) => {
 			numbers: [req.body.forgetnumber]
 		});
 		console.log(response);
+		usernumber=patientnumber;
+		updatedb=Patients;
 		res.redirect("otpforget.html");
-	} else {
+	}
+	else if (doctornumber != null) {
+		otp = Math.floor(1000 + Math.random() * 9000);
+		console.log(otp);
+		const response = await fast2sms.sendMessage({
+			authorization: process.env.API_KEY,
+			message: otp,
+			numbers: [req.body.forgetnumber]
+		});
+		updatedb=Doctors;
+		usernumber=doctornumber;
+		console.log(response);
+		res.redirect("otpforget.html");
+	}
+	else if (staffnumber != null) {
+		otp = Math.floor(1000 + Math.random() * 9000);
+		console.log(otp);
+		const response = await fast2sms.sendMessage({
+			authorization: process.env.API_KEY,
+			message: otp,
+			numbers: [req.body.forgetnumber]
+		});
+		updatedb=Staff;
+		usernumber=staffnumber;
+		console.log(response);
+		res.redirect("otpforget.html");
+	}
+	else {
 		res.render("noreg.html", {
 			name: "dear user",
 			message: "you are not registered",
@@ -195,8 +326,9 @@ app.post("/newpass", async (req, res) => {
 	// console.log(req.body.newpass);
 	var newpassword = await bcrypt.hash(req.body.newpass, 10);
 	console.log(newpassword);
+	// const updatelog = await updatedb.findOne({ mumber: forgetnum }).lean();
 	const updatepass = async _id => {
-		const result = await Patients.updateOne(
+		const result = await updatedb.updateOne(
 			{ _id },
 			{
 				$set: {
@@ -208,7 +340,7 @@ app.post("/newpass", async (req, res) => {
 	};
 	updatepass(usernumber._id);
 	res.render("noreg.html", {
-		name: "dear" + usernumber.username,
+		name: "dear "+ usernumber.username,
 		message: " your password is updated successfully",
 		bod: "login",
 		linkm: "Go to login",
@@ -223,7 +355,7 @@ app
 		});
 		return res.redirect("login.html");
 	})
-	.listen(8080, 'localhost');
+	.listen(3000, "localhost");
 
 console.log("listening");
 // updated
