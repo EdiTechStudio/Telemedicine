@@ -25,7 +25,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.engine("html", require("ejs").renderFile);
 app.set("view engine", "html");
 app.set("views", "public");
-mongoose.connect("mongodb://Localhost:27017/test7", {
+mongoose.connect("mongodb://Localhost:27017/test8", {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
 	useCreateIndex: true
@@ -355,7 +355,7 @@ app
 		});
 		return res.redirect("login.html");
 	})
-	.listen(3000, "localhost");
+	.listen(8080, "localhost");
 
 console.log("listening");
 // updated
