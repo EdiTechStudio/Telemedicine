@@ -3,29 +3,31 @@ var bodyParser = require("body-parser");
 var fast2sms = require("fast-two-sms");
 require("dotenv").config();
 var mongoose = require("mongoose");
-var multer = require("multer");
+// var multer  = require('multer')
+// var storage = multer.diskStorage({   
+//     destination: function(req, file, cb) { 
+//        cb(null, './uploadimages');    
+//     }, 
+//     filename: function (req, file, cb) { 
+//        cb(null , file.originalname);   
+//     }
+//  });
+// var upload = multer({ storage:storage })
+
+
 const Patients = require("./modal/regisForPatients.js");
 const Doctors = require("./modal/regisForDoctors.js");
 const Staff = require("./modal/regisForStaff.js");
 const bcrypt = require("bcryptjs");
-var storage = multer.diskStorage({
-	destination: function(req, file, cb) {
-		cb(null, "./uploads");
-	},
-	filename: function(req, file, cb) {
-		cb(null, file.originalname);
-	}
-});
-var upload = multer({ storage: storage });
+
 const app = express();
 app.use(bodyParser.json());
-app.use(express.urlencoded({ extended: false }));
 app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.engine("html", require("ejs").renderFile);
 app.set("view engine", "html");
 app.set("views", "public");
-mongoose.connect("mongodb://Localhost:27017/test7", {
+mongoose.connect("mongodb://Localhost:27017/test10", {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
 	useCreateIndex: true
@@ -34,8 +36,8 @@ var db = mongoose.connection;
 db.on("error", () => console.log("Error in connecting to Mongo"));
 db.once("open", () => console.log("Connected to database"));
 
-app.post("/signup", upload.single("avatar"), async (req, res, cb) => {
-	// console.log(req.file);
+app.post("/signup", async (req, res, cb) => {
+	// console.log(req.body.avatar);
 	console.log(req.body.number);
 	usernumberreg = await Patients.findOne({ number: req.body.number }).lean();
 	usernumberreg2 = await Staff.findOne({ number: req.body.number }).lean();
@@ -355,7 +357,7 @@ app
 		});
 		return res.redirect("login.html");
 	})
-	.listen(3000, "localhost");
+	.listen(8080, "localhost");
 
 console.log("listening");
 // updated
