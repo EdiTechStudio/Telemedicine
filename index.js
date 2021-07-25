@@ -27,7 +27,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.engine("html", require("ejs").renderFile);
 app.set("view engine", "html");
 app.set("views", "public");
+<<<<<<< HEAD
 mongoose.connect("mongodb://Localhost:27017/test10", {
+=======
+mongoose.connect("mongodb://Localhost:27017/test8", {
+>>>>>>> 80463e63a9bf20b397cdc27674238de278938d08
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
 	useCreateIndex: true
