@@ -3,16 +3,7 @@ var bodyParser = require("body-parser");
 var fast2sms = require("fast-two-sms");
 require("dotenv").config();
 var mongoose = require("mongoose");
-// var multer  = require('multer')
-// var storage = multer.diskStorage({   
-//     destination: function(req, file, cb) { 
-//        cb(null, './uploadimages');    
-//     }, 
-//     filename: function (req, file, cb) { 
-//        cb(null , file.originalname);   
-//     }
-//  });
-// var upload = multer({ storage:storage })
+
 
 
 const Patients = require("./modal/regisForPatients.js");
@@ -27,11 +18,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.engine("html", require("ejs").renderFile);
 app.set("view engine", "html");
 app.set("views", "public");
-<<<<<<< HEAD
-mongoose.connect("mongodb://Localhost:27017/test10", {
-=======
-mongoose.connect("mongodb://Localhost:27017/test8", {
->>>>>>> 80463e63a9bf20b397cdc27674238de278938d08
+
+mongoose.connect("mongodb://Localhost:27017/test11", {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
 	useCreateIndex: true
@@ -41,7 +29,7 @@ db.on("error", () => console.log("Error in connecting to Mongo"));
 db.once("open", () => console.log("Connected to database"));
 
 app.post("/signup", async (req, res, cb) => {
-	// console.log(req.body.avatar);
+	
 	console.log(req.body.number);
 	usernumberreg = await Patients.findOne({ number: req.body.number }).lean();
 	usernumberreg2 = await Staff.findOne({ number: req.body.number }).lean();
@@ -169,7 +157,18 @@ app.post("/logind", async (req, res) => {
 		
 		if (await bcrypt.compare(loginpow, patientlogin.password)) {
 			console.log("logged in");
-			res.render("noreg.html", {
+			dctrlist=await Doctors.find().lean();
+			arr1=[];
+			dctrlist.forEach((dctr) => {
+				
+// console.log(dctr.firstname);
+mainname=dctr.firstname+" "+dctr.lastname;
+console.log(mainname);
+arr1.push(mainname);
+			});
+			console.log(arr1);
+			res.render("logged.html", {
+				dct:arr1,
 				name: "",
 				message:
 					"Hi! " +
